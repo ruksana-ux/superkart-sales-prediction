@@ -1,0 +1,8 @@
+# Core app dependencies. Ranges keep the app installable on Streamlit Cloud,
+# which may run a newer Python version than a local machine.
+streamlit>=1.40,<2
+pandas>=2.2,<3
+numpy>=1.26,<3
+scikit-learn>=1.5,<2
+xgboost>=2.1,<4
+joblib>=1.4,<2
