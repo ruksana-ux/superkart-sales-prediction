@@ -1,5 +1,7 @@
 # 🛒 SuperKart Sales Predictor
 
+[![smoke-test](https://github.com/ruksana-ux/superkart-sales-prediction/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/ruksana-ux/superkart-sales-prediction/actions/workflows/smoke-test.yml)
+
 A Streamlit web app that predicts the **total sales** a product will generate in a
 SuperKart store, based on its price, weight, shelf allocation, category and the
 store profile.
@@ -8,7 +10,10 @@ The project is the deployment of the original `SuperKart` Colab notebook
 (exploratory analysis → preprocessing → Random Forest / XGBoost comparison →
 model serialisation), rebuilt as a self-contained Streamlit application.
 
-**Live app:** _add your Streamlit Community Cloud URL here after deploying._
+**🚀 Live app:** <https://superkart-prediction.streamlit.app>
+
+> The first page load after a restart trains the model from the included dataset
+> and takes about a minute. Later loads are instant.
 
 ---
 
@@ -41,6 +46,16 @@ Because the dataset **is** included in this repository, the app trains an
 equivalent XGBoost pipeline automatically the first time it starts (about
 20 seconds), and caches it for the rest of the session. If a saved artifact is
 present at `model/SuperKart_model_v1_0.joblib`, the app loads it instead.
+
+### Measured performance
+
+Results from the automated CI run (`tests/smoke_test.py`, Python 3.12):
+
+| Metric | Test set |
+| --- | --- |
+| R² | **0.919** |
+| RMSE | **300.5** sales units |
+| MAE | **128.9** sales units |
 
 ## Project structure
 
@@ -97,6 +112,10 @@ git push
 
 ## Deploy on GitHub + Streamlit Community Cloud
 
+This repository is already deployed at
+<https://superkart-prediction.streamlit.app>. The steps below show how it was set
+up and how to redeploy it from scratch.
+
 ### 1. Push the code to GitHub
 
 The repository is already initialised and committed locally. To push a fresh
@@ -123,9 +142,8 @@ git push -u origin main
 5. Open **Advanced settings** and select **Python 3.12** (matching `runtime.txt`).
 6. Click **Deploy**. The first build installs the dependencies, then the app
    trains the model on first load (roughly 20–60 seconds).
-7. Copy the public URL and paste it at the top of this README.
-
-Every `git push` to `main` automatically redeploys the app.
+7. The public URL is shown at the top of this README; every push to `main`
+   automatically redeploys the app.
 
 ## Troubleshooting
 
