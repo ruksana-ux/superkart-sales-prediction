@@ -17,3 +17,6 @@ Thumbs.db
 
 # Local experiments
 notebooks/.ipynb_checkpoints/
+
+# Generated Hugging Face Space staging folder (see deploy_hf.py)
+build/

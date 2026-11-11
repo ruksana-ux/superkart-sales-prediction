@@ -1,0 +1,42 @@
+name: deploy-hf-space
+
+# Mirrors the app into a Hugging Face Space after every push to main.
+# Configure it once in the repository settings:
+#   - Secret    HF_TOKEN      = a Hugging Face token with "write" scope
+#   - Variable  HF_SPACE_ID   = e.g. ruksana-ux/superkart-sales-prediction
+# Without those the workflow skips with a notice instead of failing.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hf-space
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Deploy Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_SPACE_ID" ]; then
+            echo "::notice::HF_TOKEN and/or HF_SPACE_ID are not configured - skipping Hugging Face deployment."
+            exit 0
+          fi
+          pip install "huggingface_hub>=0.34"
+          python deploy_hf.py --space-id "$HF_SPACE_ID"

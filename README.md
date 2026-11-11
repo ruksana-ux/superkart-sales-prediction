@@ -68,6 +68,7 @@ superkart-streamlit/
 ├── app.py                     # Streamlit UI
 ├── superkart_core.py          # Data loading, preprocessing, training, metrics
 ├── train_model.py             # Trains and saves the model artifact
+├── deploy_hf.py               # Stages and uploads the Hugging Face Space
 ├── requirements.txt           # Pinned dependency versions
 ├── runtime.txt                # Python version for Streamlit Cloud
 ├── sample_batch.csv           # Example file for batch prediction
@@ -76,6 +77,8 @@ superkart-streamlit/
 ├── model/
 │   ├── SuperKart_model_v1_0.joblib   # Pre-trained pipeline (committed)
 │   └── model_metadata.json           # Metrics and training details
+├── space/
+│   └── README.md              # Space card + YAML front matter for Hugging Face
 └── .streamlit/
     └── config.toml            # Theme
 ```
@@ -163,6 +166,52 @@ git push -u origin main
 7. The public URL is shown at the top of this README; every push to `main`
    automatically redeploys the app.
 
+## Deploy on Hugging Face Spaces
+
+Hugging Face Spaces is a second free host; it runs the exact same app. Spaces
+use the **Streamlit SDK**, so no Dockerfile is needed and the app listens on
+port 7860 automatically.
+
+The Space is a separate repository on Hugging Face (`huggingface.co/spaces/...`)
+whose README needs a YAML config block. Instead of duplicating files, this repo
+generates that folder with `deploy_hf.py` and uploads it:
+
+1. Create a free account at <https://huggingface.co/join>.
+2. Create a token with **write** scope at
+   <https://huggingface.co/settings/tokens>.
+3. Run one of the two options below.
+
+**Option A — automatic (recommended).** On GitHub open
+*Settings → Secrets and variables → Actions* and add:
+
+| Kind | Name | Value |
+| --- | --- | --- |
+| Secret | `HF_TOKEN` | your `hf_...` token |
+| Variable | `HF_SPACE_ID` | `<your-hf-username>/superkart-sales-prediction` |
+
+Then run the **deploy-hf-space** workflow (or just push to `main`). It mirrors
+`app.py`, `superkart_core.py`, `requirements.txt`, `data/`, `model/` and
+`.streamlit/config.toml` into the Space, so the two hosts never drift apart.
+If the Space does not exist yet, the workflow creates it as a public Streamlit
+Space.
+
+**Option B — manual.** From the project folder:
+
+```bash
+pip install huggingface_hub
+export HF_TOKEN=hf_xxxxxxxx            # PowerShell: $env:HF_TOKEN="hf_xxxxxxxx"
+python deploy_hf.py --space-id <your-hf-username>/superkart-sales-prediction
+```
+
+To inspect what will be uploaded without contacting Hugging Face:
+
+```bash
+python deploy_hf.py --no-upload      # writes build/hf-space/
+```
+
+The build page for the Space shows the install progress; the first build takes a
+few minutes, later pushes rebuild in under a minute.
+
 ## Troubleshooting
 
 | Symptom | Fix |
@@ -173,6 +222,8 @@ git push -u origin main
 | First page load is slow | Check that `model/SuperKart_model_v1_0.joblib` is committed; otherwise the app trains a fallback model. |
 | Batch upload shows missing columns | Download the in-app CSV template; all eight feature columns are required. |
 | Predictions look off for extreme inputs | The model was trained on the ranges in `SuperKart.csv`; predictions far outside them are extrapolations. |
+| Space stuck in *Building* | Open the Space's *Logs* tab; a dependency that cannot be built shows up there first. |
+| `401 Unauthorized` when deploying | The token is missing the **write** scope, or belongs to a different account than `HF_SPACE_ID`. |
 
 ## Credits
 
