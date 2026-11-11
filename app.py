@@ -47,7 +47,10 @@ def get_artifacts() -> dict:
     if loaded_from_disk:
         model = joblib.load(MODEL_PATH)
     else:
-        model = train_pipeline(X_train, y_train)
+        # Fallback for forks that do not include the model artifact. Training
+        # with the full forest on a shared host can trigger CPU throttling, so
+        # use the lightweight configuration here.
+        model = train_pipeline(X_train, y_train, lightweight=True)
 
     test_predictions = model.predict(X_test)
 

@@ -97,8 +97,13 @@ def split_data(
     )
 
 
-def build_pipeline() -> Pipeline:
-    """Build the preprocessing + XGBoost pipeline used for training."""
+def build_pipeline(*, lightweight: bool = False) -> Pipeline:
+    """Build the preprocessing + XGBoost pipeline used for training.
+
+    ``lightweight`` is used only when the app has to train at startup on a
+    low-resource host (such as Streamlit Community Cloud). It keeps CPU usage
+    low by using fewer trees and a single thread.
+    """
     numerical_transformer = Pipeline(
         steps=[("scaler", StandardScaler())]
     )
@@ -117,7 +122,7 @@ def build_pipeline() -> Pipeline:
         ]
     )
     regressor = XGBRegressor(
-        n_estimators=400,
+        n_estimators=150 if lightweight else 400,
         max_depth=3,
         learning_rate=0.06,
         subsample=0.9,
@@ -127,7 +132,7 @@ def build_pipeline() -> Pipeline:
         objective="reg:squarederror",
         tree_method="hist",
         random_state=RANDOM_STATE,
-        n_jobs=-1,
+        n_jobs=1 if lightweight else -1,
     )
     return Pipeline(
         steps=[("preprocessor", preprocessor), ("regressor", regressor)]
@@ -138,9 +143,11 @@ def train_pipeline(
     X_train: pd.DataFrame,
     y_train: pd.Series,
     pipeline: Pipeline | None = None,
+    *,
+    lightweight: bool = False,
 ) -> Pipeline:
     """Fit the pipeline on the training data and return it."""
-    model = pipeline if pipeline is not None else build_pipeline()
+    model = pipeline if pipeline is not None else build_pipeline(lightweight=lightweight)
     model.fit(X_train, y_train)
     return model
 

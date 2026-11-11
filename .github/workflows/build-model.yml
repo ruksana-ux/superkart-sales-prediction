@@ -1,0 +1,50 @@
+name: build-model
+
+# Trains the pipeline and commits model/SuperKart_model_v1_0.joblib so the
+# Streamlit app can load a ready artifact instead of training on every cold
+# start (training at startup can trigger Streamlit Cloud CPU throttling).
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "superkart_core.py"
+      - "data/SuperKart.csv"
+      - "train_model.py"
+      - "requirements.txt"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Train and save the model
+        run: python train_model.py
+
+      - name: Commit the model artifact
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add model/SuperKart_model_v1_0.joblib model/model_metadata.json
+          if git diff --cached --quiet; then
+            echo "Model unchanged, nothing to commit."
+          else
+            git commit -m "Build trained SuperKart model artifact [skip ci]"
+            git push
+          fi

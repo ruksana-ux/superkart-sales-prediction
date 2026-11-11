@@ -12,8 +12,8 @@ model serialisation), rebuilt as a self-contained Streamlit application.
 
 **🚀 Live app:** <https://superkart-prediction.streamlit.app>
 
-> The first page load after a restart trains the model from the included dataset
-> and takes about a minute. Later loads are instant.
+> The trained model ships with the repository, so the app starts immediately.
+> No training happens on page load.
 
 ---
 
@@ -42,10 +42,14 @@ model serialisation), rebuilt as a self-contained Streamlit application.
 
 The original notebook saved its tuned pipeline as
 `SuperKart_model_v1_0.joblib`, but that file was never downloaded from Colab.
-Because the dataset **is** included in this repository, the app trains an
-equivalent XGBoost pipeline automatically the first time it starts (about
-20 seconds), and caches it for the rest of the session. If a saved artifact is
-present at `model/SuperKart_model_v1_0.joblib`, the app loads it instead.
+This repository therefore includes a freshly trained artifact at
+`model/SuperKart_model_v1_0.joblib`, built automatically by the
+[`build-model`](.github/workflows/build-model.yml) GitHub Actions workflow.
+The app loads it at startup, so page loads are fast and use almost no CPU.
+
+If the artifact is missing (for example in a fork), the app falls back to
+training a lightweight single-threaded model from `data/SuperKart.csv`. The full
+400-tree model is only trained by `train_model.py` and the CI workflow.
 
 ### Measured performance
 
@@ -63,13 +67,15 @@ Results from the automated CI run (`tests/smoke_test.py`, Python 3.12):
 superkart-streamlit/
 ├── app.py                     # Streamlit UI
 ├── superkart_core.py          # Data loading, preprocessing, training, metrics
-├── train_model.py             # Optional: train and save a model artifact
-├── requirements.txt
+├── train_model.py             # Trains and saves the model artifact
+├── requirements.txt           # Pinned dependency versions
 ├── runtime.txt                # Python version for Streamlit Cloud
 ├── sample_batch.csv           # Example file for batch prediction
 ├── data/
 │   └── SuperKart.csv          # 8,763 rows of historical sales
-├── model/                     # Optional saved model + metadata
+├── model/
+│   ├── SuperKart_model_v1_0.joblib   # Pre-trained pipeline (committed)
+│   └── model_metadata.json           # Metrics and training details
 └── .streamlit/
     └── config.toml            # Theme
 ```
@@ -94,21 +100,33 @@ streamlit run app.py
 
 The app opens at <http://localhost:8501>.
 
-### Optional: create a fixed model artifact
+### Rebuild the model artifact
+
+The committed artifact was produced by the `build-model` GitHub Actions
+workflow. To rebuild it manually:
 
 ```bash
 python train_model.py
-```
-
-This writes `model/SuperKart_model_v1_0.joblib` and
-`model/model_metadata.json`. Commit them if you want the deployed app to skip
-training at startup:
-
-```bash
 git add model/
-git commit -m "Add trained SuperKart model artifact"
+git commit -m "Rebuild SuperKart model artifact"
 git push
 ```
+
+You can also run the **build-model** workflow from the *Actions* tab on GitHub;
+it trains the model and commits the updated artifact for you.
+
+## Staying within free-tier limits
+
+Streamlit Community Cloud throttles apps that use too much CPU. The original
+version trained a 400-tree XGBoost model on every container restart, which
+caused the throttle warning. The current version:
+
+- ships a pre-trained `model/SuperKart_model_v1_0.joblib` and only loads it;
+- pins dependency versions so the artifact always unpickles cleanly;
+- uses a lightweight, single-threaded model only if the artifact is missing.
+
+No action is needed when a throttle notice appears — it expires automatically.
+To avoid repeat notices, avoid repeated redeploys and keep the artifact committed.
 
 ## Deploy on GitHub + Streamlit Community Cloud
 
@@ -140,8 +158,8 @@ git push -u origin main
    - **Main file path:** `app.py`
    - **App URL:** e.g. `superkart-sales-prediction`
 5. Open **Advanced settings** and select **Python 3.12** (matching `runtime.txt`).
-6. Click **Deploy**. The first build installs the dependencies, then the app
-   trains the model on first load (roughly 20–60 seconds).
+6. Click **Deploy**. The first build installs the dependencies; because the model
+   artifact is committed, the app is ready as soon as the build finishes.
 7. The public URL is shown at the top of this README; every push to `main`
    automatically redeploys the app.
 
@@ -151,7 +169,8 @@ git push -u origin main
 | --- | --- |
 | `Dataset not found` | Make sure `data/SuperKart.csv` is committed (it is tracked by Git, not ignored). |
 | Build fails on `xgboost` | Check the Streamlit build logs; use Python 3.12 in **Advanced settings**. |
-| First page load is slow | Expected: the model trains once per container start. Commit a joblib artifact to skip this. |
+| "Your app has been throttled" | Temporary free-tier CPU limit. It expires automatically; the pre-built artifact prevents repeat notices. |
+| First page load is slow | Check that `model/SuperKart_model_v1_0.joblib` is committed; otherwise the app trains a fallback model. |
 | Batch upload shows missing columns | Download the in-app CSV template; all eight feature columns are required. |
 | Predictions look off for extreme inputs | The model was trained on the ranges in `SuperKart.csv`; predictions far outside them are extrapolations. |
 
