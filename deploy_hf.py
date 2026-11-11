@@ -105,13 +105,25 @@ def main() -> int:
         return 2
 
     api = HfApi(token=args.token)
-    api.create_repo(
-        repo_id=args.space_id,
-        repo_type="space",
-        space_sdk="streamlit",
-        private=args.private,
-        exist_ok=True,
-    )
+    if api.repo_exists(repo_id=args.space_id, repo_type="space"):
+        print(f"Space {args.space_id} already exists - uploading files into it.")
+    else:
+        try:
+            api.create_repo(
+                repo_id=args.space_id,
+                repo_type="space",
+                space_sdk="streamlit",
+                private=args.private,
+                exist_ok=True,
+            )
+        except Exception as exc:  # noqa: BLE001 - surface the API message verbatim
+            print(
+                f"error: could not create the Space automatically:\n{exc}\n\n"
+                "Create it once at https://huggingface.co/new-space (SDK: Streamlit,\n"
+                "hardware: CPU basic, public), then run this script again.",
+                file=sys.stderr,
+            )
+            return 1
     api.upload_folder(
         folder_path=str(staging),
         repo_id=args.space_id,
