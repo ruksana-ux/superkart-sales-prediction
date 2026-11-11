@@ -1,0 +1,25 @@
+{
+  "project": "SuperKart sales prediction",
+  "model": "XGBoostRegressor (scikit-learn Pipeline)",
+  "target": "Product_Store_Sales_Total",
+  "dataset_rows": 8763,
+  "test_size": 0.2,
+  "random_state": 42,
+  "metrics": {
+    "train": {
+      "R-squared": 0.9332986101298606,
+      "Adj. R-squared": 0.9332223908584764,
+      "RMSE": 272.10332034934197,
+      "MAE": 114.7420265702317,
+      "MAPE": 0.04120833588998763
+    },
+    "test": {
+      "R-squared": 0.9193031613560152,
+      "Adj. R-squared": 0.9189329923714098,
+      "RMSE": 300.4934126594602,
+      "MAE": 128.90040807416082,
+      "MAPE": 0.04501623050586599
+    }
+  },
+  "trained_at": "2026-11-11T06:03:21+00:00"
+}
