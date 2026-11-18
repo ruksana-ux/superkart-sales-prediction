@@ -1,0 +1,46 @@
+name: publish-hf-assets
+
+# Publishes the trained model and the dataset as Hugging Face repositories
+# (free: model and dataset repos are plain storage, unlike Spaces).
+# Requires the HF_TOKEN repository secret with write scope; skips without it.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "data/SuperKart.csv"
+      - "model/SuperKart_model_v1_0.joblib"
+      - "model/model_metadata.json"
+      - "hf/**"
+      - "publish_hf_assets.py"
+
+concurrency:
+  group: publish-hf-assets
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Publish model and dataset
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_OWNER: ${{ vars.HF_OWNER }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::notice::HF_TOKEN is not configured - skipping Hugging Face publish."
+            exit 0
+          fi
+          pip install "huggingface_hub>=0.34"
+          python publish_hf_assets.py

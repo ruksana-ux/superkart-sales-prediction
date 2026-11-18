@@ -69,6 +69,7 @@ superkart-streamlit/
 ├── superkart_core.py          # Data loading, preprocessing, training, metrics
 ├── train_model.py             # Trains and saves the model artifact
 ├── deploy_hf.py               # Stages and uploads the Hugging Face Space
+├── publish_hf_assets.py       # Publishes the model + dataset to Hugging Face
 ├── requirements.txt           # Pinned dependency versions
 ├── runtime.txt                # Python version for Streamlit Cloud
 ├── sample_batch.csv           # Example file for batch prediction
@@ -80,6 +81,9 @@ superkart-streamlit/
 ├── space/
 │   ├── README.md              # Space card + YAML config for Hugging Face
 │   └── Dockerfile             # Runs the app on port 7860 inside the Space
+├── hf/
+│   ├── model_card.md          # README for the Hugging Face model repo
+│   └── dataset_card.md        # README for the Hugging Face dataset repo
 └── .streamlit/
     └── config.toml            # Theme
 ```
@@ -226,6 +230,28 @@ python deploy_hf.py --no-upload      # writes build/hf-space/
 
 The build page for the Space shows the install progress; the first build takes a
 few minutes, later pushes rebuild in under a minute.
+
+## Publish the model and dataset to Hugging Face (free)
+
+Model and dataset repositories are plain file storage, so they stay free even
+though Spaces no longer are. `publish_hf_assets.py` uploads:
+
+| Repository | Contents |
+| --- | --- |
+| `models/<user>/superkart-sales-prediction-model` | `SuperKart_model_v1_0.joblib`, `model_metadata.json`, model card |
+| `datasets/<user>/superkart-sales-prediction-data` | `SuperKart.csv` (viewable with the dataset viewer), dataset card |
+
+The **publish-hf-assets** workflow runs this automatically whenever the dataset,
+the model artifact or a card changes. To run it yourself:
+
+```bash
+HF_TOKEN=hf_xxxx python publish_hf_assets.py
+# or: python publish_hf_assets.py --owner <your-username>
+```
+
+The owner defaults to whichever account the token belongs to. This gives your
+Hugging Face profile a public model and dataset alongside the app, without any
+paid plan.
 
 ## Troubleshooting
 
