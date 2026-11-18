@@ -1,0 +1,2 @@
+# Smoke test only - the full port will pin pandas/scikit-learn/xgboost too.
+gradio>=5.0

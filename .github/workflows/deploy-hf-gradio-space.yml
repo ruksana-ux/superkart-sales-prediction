@@ -1,0 +1,61 @@
+name: deploy-hf-gradio-space
+
+# Uploads the Gradio app (gradio_space/) to a Hugging Face Space.
+#
+# Why Gradio and not the Streamlit app? Hugging Face now charges for cpu-basic
+# compute Spaces, but ZeroGPU hardware is still free - and ZeroGPU only runs
+# Gradio SDK Spaces. This workflow is the free-tier path.
+#
+# Configure once in the repository settings (both optional):
+#   - Secret    HF_TOKEN          = a Hugging Face token with "write" scope
+#   - Variable  HF_GRADIO_SPACE   = e.g. ruksanakhanum/Superkartproject
+# If HF_GRADIO_SPACE is unset it is derived from HF_SPACE_ID as
+# "<owner>/Superkartproject".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "gradio_space/**"
+      - "deploy_hf_gradio.py"
+      - ".github/workflows/deploy-hf-gradio-space.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hf-gradio-space
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Deploy Gradio Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+          HF_GRADIO_SPACE: ${{ vars.HF_GRADIO_SPACE }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::notice::HF_TOKEN is not configured - skipping Gradio Space deployment."
+            exit 0
+          fi
+          if [ -z "$HF_GRADIO_SPACE" ] && [ -n "$HF_SPACE_ID" ]; then
+            export HF_GRADIO_SPACE="${HF_SPACE_ID%%/*}/Superkartproject"
+          fi
+          if [ -z "$HF_GRADIO_SPACE" ]; then
+            echo "::notice::Set HF_GRADIO_SPACE (or HF_SPACE_ID) to deploy - skipping."
+            exit 0
+          fi
+          echo "Deploying to $HF_GRADIO_SPACE"
+          pip install "huggingface_hub>=0.34"
+          python deploy_hf_gradio.py --space-id "$HF_GRADIO_SPACE"
