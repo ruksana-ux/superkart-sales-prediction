@@ -16,7 +16,21 @@ Estimate the **total sales** a product will generate in a SuperKart store from
 its price, weight, shelf allocation, category and store profile.
 
 Built on a scikit-learn pipeline with an XGBoost regressor trained on 8,763
-sales records (test R² 0.919, RMSE 300, MAE 129).
+sales records (test R² 0.919, RMSE 300, MAE 129). Four tabs: single prediction,
+batch prediction from a CSV, model performance, and a data explorer.
+
+This is the Hugging Face Spaces twin of the
+[Streamlit app](https://superkart-prediction.streamlit.app); both share the same
+`superkart_core.py` and joblib artifact.
+
+## Why Gradio?
+
+Hugging Face now charges for `cpu-basic` compute Spaces, but **ZeroGPU** hardware
+is still free — and ZeroGPU only runs Gradio SDK Spaces. The XGBoost model is
+CPU-only, so inference runs in the main process; the required `@spaces.GPU`
+function is used only for an environment probe under *Environment check*.
+
+## Links
 
 - Trained model: [ruksanakhanum/superkart-sales-prediction-model](https://huggingface.co/ruksanakhanum/superkart-sales-prediction-model)
 - Dataset: [ruksanakhanum/superkart-sales-prediction-data](https://huggingface.co/datasets/ruksanakhanum/superkart-sales-prediction-data)

@@ -1,2 +1,12 @@
-# Smoke test only - the full port will pin pandas/scikit-learn/xgboost too.
-gradio>=5.0
+# Runtime dependencies for the Gradio Space.
+#
+# scikit-learn / xgboost / joblib are pinned to the versions used to build
+# model/SuperKart_model_v1_0.joblib so the artifact unpickles cleanly.
+# pandas and numpy are left unpinned so pip can satisfy them alongside the
+# ZeroGPU base image (which ships torch and the `spaces` package).
+gradio
+joblib==1.6.0
+scikit-learn==1.9.1
+xgboost==3.4.1
+pandas
+numpy
