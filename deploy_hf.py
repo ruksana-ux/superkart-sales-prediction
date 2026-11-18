@@ -47,8 +47,10 @@ def build_staging() -> Path:
     for name in FOLDERS:
         shutil.copytree(ROOT / name, STAGING / name, ignore=IGNORE)
 
-    # Hugging Face reads the Space configuration from the README front matter.
+    # Hugging Face reads the Space configuration from the README front matter,
+    # and the Dockerfile builds the runtime image (sdk: docker).
     shutil.copy2(ROOT / "space" / "README.md", STAGING / "README.md")
+    shutil.copy2(ROOT / "space" / "Dockerfile", STAGING / "Dockerfile")
     return STAGING
 
 
@@ -123,14 +125,14 @@ def main() -> int:
             api.create_repo(
                 repo_id=args.space_id,
                 repo_type="space",
-                space_sdk="streamlit",
+                space_sdk="docker",
                 private=args.private,
                 exist_ok=True,
             )
         except Exception as exc:  # noqa: BLE001 - surface the API message verbatim
             print(
                 f"error: could not create the Space automatically:\n{exc}\n\n"
-                "Create it once at https://huggingface.co/new-space (SDK: Streamlit,\n"
+                "Create it once at https://huggingface.co/new-space (SDK: Docker,\n"
                 "hardware: CPU basic, public), then run this script again.",
                 file=sys.stderr,
             )

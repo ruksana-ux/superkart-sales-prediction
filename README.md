@@ -78,7 +78,8 @@ superkart-streamlit/
 │   ├── SuperKart_model_v1_0.joblib   # Pre-trained pipeline (committed)
 │   └── model_metadata.json           # Metrics and training details
 ├── space/
-│   └── README.md              # Space card + YAML front matter for Hugging Face
+│   ├── README.md              # Space card + YAML config for Hugging Face
+│   └── Dockerfile             # Runs the app on port 7860 inside the Space
 └── .streamlit/
     └── config.toml            # Theme
 ```
@@ -169,8 +170,8 @@ git push -u origin main
 ## Deploy on Hugging Face Spaces
 
 Hugging Face Spaces is a second free host; it runs the exact same app. Spaces
-use the **Streamlit SDK**, so no Dockerfile is needed and the app listens on
-port 7860 automatically.
+are Docker containers, so `space/Dockerfile` starts Streamlit on the port Spaces
+expects (7860).
 
 The Space is a separate repository on Hugging Face (`huggingface.co/spaces/...`)
 whose README needs a YAML config block. Instead of duplicating files, this repo
@@ -189,11 +190,15 @@ generates that folder with `deploy_hf.py` and uploads it:
 | Secret | `HF_TOKEN` | your `hf_...` token |
 | Variable | `HF_SPACE_ID` | `<your-hf-username>/superkart-sales-prediction` |
 
-Then run the **deploy-hf-space** workflow (or just push to `main`). It mirrors
-`app.py`, `superkart_core.py`, `requirements.txt`, `data/`, `model/` and
-`.streamlit/config.toml` into the Space, so the two hosts never drift apart.
-If the Space does not exist yet, the workflow creates it as a public Streamlit
-Space.
+Then run the **deploy-hf-space** workflow (or just push to `main`). It creates
+the Space as a public Docker Space if needed, then mirrors `app.py`,
+`superkart_core.py`, `requirements.txt`, `data/`, `model/`,
+`.streamlit/config.toml`, `space/Dockerfile` and `space/README.md` into it, so
+the two hosts never drift apart.
+
+> Why Docker and not the Streamlit SDK? Hugging Face's creation API only accepts
+> `gradio`, `docker` or `static` — its own Streamlit template
+> (`streamlit/streamlit-template-space`) is a Docker Space too.
 
 **Option B — manual.** From the project folder:
 

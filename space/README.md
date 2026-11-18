@@ -3,9 +3,8 @@ title: SuperKart Sales Predictor
 emoji: 🛒
 colorFrom: purple
 colorTo: indigo
-sdk: streamlit
-python_version: "3.12"
-app_file: app.py
+sdk: docker
+app_port: 7860
 pinned: false
 license: mit
 short_description: Predict total sales for a product in a store
