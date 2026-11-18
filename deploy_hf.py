@@ -105,6 +105,17 @@ def main() -> int:
         return 2
 
     api = HfApi(token=args.token)
+    try:
+        who = api.whoami()
+        print(f"Authenticated as {who.get('name')}")
+    except Exception as exc:  # noqa: BLE001
+        print(
+            f"error: the Hugging Face token was rejected:\n{exc}\n\n"
+            "Create a new token with Write scope at "
+            "https://huggingface.co/settings/tokens and update the HF_TOKEN secret.",
+            file=sys.stderr,
+        )
+        return 1
     if api.repo_exists(repo_id=args.space_id, repo_type="space"):
         print(f"Space {args.space_id} already exists - uploading files into it.")
     else:
