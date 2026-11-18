@@ -1,10 +1,17 @@
 name: deploy-hf-space
 
-# Mirrors the app into a Hugging Face Space after every push to main.
+# Mirrors the app into a Hugging Face Space.
+#
+# NOTE: Hugging Face requires a PRO subscription ($9/month) to host compute
+# Spaces (Streamlit/Gradio/Docker) on cpu-basic - free accounts only get static
+# Spaces, which cannot run a Python server. Automatic deployment therefore stays
+# switched off unless you set the repository variable HF_DEPLOY_ENABLED=true.
+#
 # Configure it once in the repository settings:
-#   - Secret    HF_TOKEN      = a Hugging Face token with "write" scope
-#   - Variable  HF_SPACE_ID   = e.g. ruksana-ux/superkart-sales-prediction
-# Without those the workflow skips with a notice instead of failing.
+#   - Secret    HF_TOKEN            = a Hugging Face token with "write" scope
+#   - Variable  HF_SPACE_ID         = e.g. ruksanakhanum/superkart-sales-prediction
+#   - Variable  HF_DEPLOY_ENABLED   = true (only with a PRO subscription)
+# Manual runs from the Actions tab always work, regardless of the variable.
 
 on:
   push:
@@ -17,6 +24,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name == 'workflow_dispatch' || vars.HF_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

@@ -167,11 +167,17 @@ git push -u origin main
 7. The public URL is shown at the top of this README; every push to `main`
    automatically redeploys the app.
 
-## Deploy on Hugging Face Spaces
+## Deploy on Hugging Face Spaces (requires a paid plan)
 
-Hugging Face Spaces is a second free host; it runs the exact same app. Spaces
-are Docker containers, so `space/Dockerfile` starts Streamlit on the port Spaces
-expects (7860).
+> **Hugging Face is no longer free for this kind of app.** Free accounts get
+> `limit=0` for the `cpu-basic` hardware, so Streamlit/Gradio/Docker Spaces
+> return `402 Payment Required`; only *static* Spaces (plain HTML/JS, no Python
+> server) are free. Hosting this app there needs **PRO** ($9/month). The setup
+> below is ready to go the moment you have it — otherwise keep using Streamlit
+> Community Cloud, which is free.
+
+Spaces are Docker containers, so `space/Dockerfile` starts Streamlit on the port
+Spaces expects (7860).
 
 The Space is a separate repository on Hugging Face (`huggingface.co/spaces/...`)
 whose README needs a YAML config block. Instead of duplicating files, this repo
@@ -189,10 +195,14 @@ generates that folder with `deploy_hf.py` and uploads it:
 | --- | --- | --- |
 | Secret | `HF_TOKEN` | your `hf_...` token |
 | Variable | `HF_SPACE_ID` | `<your-hf-username>/superkart-sales-prediction` |
+| Variable | `HF_DEPLOY_ENABLED` | `true` — only set this once you have PRO |
 
-Then run the **deploy-hf-space** workflow (or just push to `main`). It creates
-the Space as a public Docker Space if needed, then mirrors `app.py`,
-`superkart_core.py`, `requirements.txt`, `data/`, `model/`,
+Automatic deployment is off until `HF_DEPLOY_ENABLED` is `true`, so pushes to
+`main` never fail because of the paid-tier limit. Running the workflow manually
+from the *Actions* tab always deploys.
+
+The workflow creates the Space as a public Docker Space if needed, then mirrors
+`app.py`, `superkart_core.py`, `requirements.txt`, `data/`, `model/`,
 `.streamlit/config.toml`, `space/Dockerfile` and `space/README.md` into it, so
 the two hosts never drift apart.
 
@@ -228,6 +238,7 @@ few minutes, later pushes rebuild in under a minute.
 | Batch upload shows missing columns | Download the in-app CSV template; all eight feature columns are required. |
 | Predictions look off for extreme inputs | The model was trained on the ranges in `SuperKart.csv`; predictions far outside them are extrapolations. |
 | Space stuck in *Building* | Open the Space's *Logs* tab; a dependency that cannot be built shows up there first. |
+| `402 Payment Required` when deploying | Hugging Face needs PRO to host compute Spaces; free accounts are limited to static Spaces. |
 | `401 Unauthorized` when deploying | The token is missing the **write** scope, or belongs to a different account than `HF_SPACE_ID`. |
 
 ## Credits

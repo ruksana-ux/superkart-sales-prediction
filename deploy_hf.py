@@ -130,12 +130,21 @@ def main() -> int:
                 exist_ok=True,
             )
         except Exception as exc:  # noqa: BLE001 - surface the API message verbatim
-            print(
-                f"error: could not create the Space automatically:\n{exc}\n\n"
-                "Create it once at https://huggingface.co/new-space (SDK: Docker,\n"
-                "hardware: CPU basic, public), then run this script again.",
-                file=sys.stderr,
-            )
+            message = str(exc)
+            print(f"error: could not create the Space automatically:\n{exc}\n", file=sys.stderr)
+            if "402" in message or "PRO" in message:
+                print(
+                    "Hugging Face now requires a PRO subscription ($9/month) to host\n"
+                    "compute Spaces (Streamlit/Gradio/Docker) on cpu-basic; only static\n"
+                    "Spaces are free. See https://huggingface.co/pro.",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    "Create it once at https://huggingface.co/new-space (SDK: Streamlit\n"
+                    "or Docker, hardware: CPU basic, public), then run this script again.",
+                    file=sys.stderr,
+                )
             return 1
     api.upload_folder(
         folder_path=str(staging),
