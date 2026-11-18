@@ -62,6 +62,11 @@ def _gpu_probe() -> str:
         return f"GPU probe failed: {exc}"
 
 
+# ZeroGPU refuses to start a Space that declares no ``@spaces.GPU`` function
+# ("No @spaces.GPU function detected during startup"), so this probe must stay
+# defined even though the app never needs a GPU. It is deliberately not wired to
+# a UI control: every call spends the visitor's small daily ZeroGPU quota, while
+# the XGBoost model runs on CPU in the main process.
 if HAS_SPACES:
 
     @spaces.GPU
@@ -533,15 +538,17 @@ with gr.Blocks(title="SuperKart Sales Predictor", theme=gr.themes.Soft()) as dem
                     """
                 )
 
-    with gr.Accordion("Environment check", open=False):
+    with gr.Accordion("About this deployment", open=False):
         gr.Markdown(
-            "Hugging Face's free ZeroGPU hardware requires the Space to declare a "
-            "`@spaces.GPU` function. The XGBoost model is CPU-only, so this button "
-            "just verifies the GPU worker is reachable."
+            "This Space runs on Hugging Face's free **ZeroGPU** hardware, which is "
+            "only available to the Gradio SDK and requires the app to declare a "
+            "`@spaces.GPU` function. The XGBoost model is CPU-only, so all "
+            "predictions run in the main process and no GPU quota is used.\n\n"
+            "- Streamlit twin: [superkart-prediction.streamlit.app](https://superkart-prediction.streamlit.app)\n"
+            "- Model: [ruksanakhanum/superkart-sales-prediction-model](https://huggingface.co/ruksanakhanum/superkart-sales-prediction-model)\n"
+            "- Dataset: [ruksanakhanum/superkart-sales-prediction-data](https://huggingface.co/datasets/ruksanakhanum/superkart-sales-prediction-data)\n"
+            "- Source: [ruksana-ux/superkart-sales-prediction](https://github.com/ruksana-ux/superkart-sales-prediction)"
         )
-        gpu_button = gr.Button("Probe the GPU worker")
-        gpu_output = gr.Textbox(label="Result")
-        gpu_button.click(gpu_probe, inputs=[], outputs=[gpu_output])
 
     gr.Markdown(FOOTER)
 

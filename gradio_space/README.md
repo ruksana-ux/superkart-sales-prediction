@@ -28,8 +28,9 @@ This is the Hugging Face Spaces twin of the
 
 Hugging Face now charges for `cpu-basic` compute Spaces, but **ZeroGPU** hardware
 is still free — and ZeroGPU only runs Gradio SDK Spaces. The XGBoost model is
-CPU-only, so inference runs in the main process; the required `@spaces.GPU`
-function is used only for an environment probe under *Environment check*.
+CPU-only, so inference runs in the main process and no GPU quota is consumed; the
+`@spaces.GPU` function that ZeroGPU requires is declared but not exposed in the
+UI. The Space requests Python 3.12 because scikit-learn 1.9 needs 3.11+.
 
 ## Links
 
